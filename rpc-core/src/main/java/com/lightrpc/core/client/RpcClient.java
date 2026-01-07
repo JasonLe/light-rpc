@@ -1,6 +1,7 @@
 package com.lightrpc.core.client;
 
 import com.lightrpc.common.model.RpcMessage;
+import com.lightrpc.common.model.RpcResponse;
 import com.lightrpc.core.codec.RpcMessageDecoder;
 import com.lightrpc.core.codec.RpcMessageEncoder;
 import io.netty.bootstrap.Bootstrap;
@@ -13,12 +14,15 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.CompletableFuture;
+
 @Slf4j
 public class RpcClient {
 
     private final String host;
     private final int port;
     private static final EventLoopGroup group = new NioEventLoopGroup();
+    private final UnprocessedRequests unprocessedRequests;
 
     // 我们需要持有这个 channel，稍后用来发消息
     private Channel channel;
@@ -26,6 +30,7 @@ public class RpcClient {
     public RpcClient(String host, int port) {
         this.host = host;
         this.port = port;
+        this.unprocessedRequests = new UnprocessedRequests();
     }
 
     public void connect() {
@@ -60,7 +65,10 @@ public class RpcClient {
     /**
      * 发送消息的方法
      */
-    public void sendRequest(RpcMessage message) {
+    public CompletableFuture<RpcResponse> sendRequest(RpcMessage message) {
+        CompletableFuture<RpcResponse> resultFuture = new CompletableFuture<>();
+        unprocessedRequests.put(message.getRequestId(), resultFuture);
         this.channel.writeAndFlush(message);
+        return resultFuture;
     }
 }

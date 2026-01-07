@@ -2,6 +2,7 @@ package com.lightrpc.core.server;
 
 import com.lightrpc.core.codec.RpcMessageDecoder;
 import com.lightrpc.core.codec.RpcMessageEncoder;
+import com.lightrpc.registry.ServiceRegistry;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -19,10 +20,28 @@ public class RpcServer {
 
     private final String host;
     private final int port;
+    // 注册中心实现类
+    private final ServiceRegistry serviceRegistry;
 
-    public RpcServer(String host, int port) {
+    public RpcServer(String host, int port, ServiceRegistry serviceRegistry) {
         this.host = host;
         this.port = port;
+        this.serviceRegistry = serviceRegistry;
+    }
+
+    /**
+     * 发布服务的方法
+     * 1. 注册到本地 LocalRegistry (供 ServerHandler 反射调用)
+     * 2. 注册到 Nacos (供 Client 发现)
+     */
+    public <T> void publishService(String serviceName, Object serviceBean) {
+        // 1. 本地注册
+        LocalRegistry.register(serviceName, serviceBean);
+
+        // 2. 远程注册 (把本机 IP 和端口告诉 Nacos)
+        if (serviceRegistry != null) {
+            serviceRegistry.register(serviceName, new InetSocketAddress(host, port));
+        }
     }
 
     public void start() {
@@ -91,10 +110,5 @@ public class RpcServer {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }
-    }
-
-    // 简单的 Main 测试
-    public static void main(String[] args) {
-        new RpcServer("127.0.0.1", 6666).start();
     }
 }

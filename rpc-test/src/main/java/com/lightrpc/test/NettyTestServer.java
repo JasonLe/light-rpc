@@ -3,6 +3,8 @@ package com.lightrpc.test;
 import com.lightrpc.core.server.RpcServer;
 
 import com.lightrpc.core.server.LocalRegistry;
+import com.lightrpc.registry.ServiceRegistry;
+import com.lightrpc.registry.impl.NacosServiceRegistry;
 import com.lightrpc.test.impl.UserServiceImpl;
 
 /**
@@ -13,8 +15,11 @@ public class NettyTestServer {
         // 注册服务
         LocalRegistry.register("com.lightrpc.api.user.UserService", new UserServiceImpl());
 
+        ServiceRegistry serviceRegistry = new NacosServiceRegistry("127.0.0.1:8848");
+
         // 模拟服务端启动，监听 6666 端口
-        RpcServer server = new RpcServer("127.0.0.1", 6666);
+        RpcServer server = new RpcServer("127.0.0.1", 6666, serviceRegistry);
+        server.publishService("com.lightrpc.api.user.UserService", new UserServiceImpl());
         server.start();
     }
 }
