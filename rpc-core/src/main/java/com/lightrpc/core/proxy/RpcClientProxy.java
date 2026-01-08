@@ -56,27 +56,18 @@ public class RpcClientProxy implements InvocationHandler {
             throw new RuntimeException("未找到服务地址: " + rpcRequest.getInterfaceName());
         }
 
-        // 4. 创建客户端并发送请求
-        // 【注意】这里为了演示简单，每次调用都新建连接。生产环境必须用“连接池”复用 Channel！
-        RpcClient client = new RpcClient(address.getHostName(), address.getPort());
-        try {
-            client.connect(); // 连接服务端
+        CompletableFuture<RpcResponse> future = RpcClientFactory.sendRequest(
+                address.getHostName(),
+                address.getPort(),
+                rpcMessage
+        );
+        RpcResponse response = future.get(); // 阻塞等待
 
-            // 发送并等待结果（异步转同步）
-            CompletableFuture<RpcResponse> future = client.sendRequest(rpcMessage);
-            RpcResponse response = future.get(); // 阻塞等待
-
-            if (response.getCode() == null || response.getCode() != 200) {
-                throw new RuntimeException("RPC调用失败: " + response.getMessage());
-            }
-
-            return response.getData();
-
-        } finally {
-            // 用完关闭，因为每次都 new，不关会资源耗尽
-            // 实际项目中不能这么做，要复用连接
-            // client.close(); // 暂时没有 close 方法，先留空
+        if (response.getCode() == null || response.getCode() != 200) {
+            throw new RuntimeException("RPC调用失败: " + response.getMessage());
         }
+
+        return response.getData();
     }
 
     private String[] getParameterTypes(Class<?>[] parameterTypes) {
