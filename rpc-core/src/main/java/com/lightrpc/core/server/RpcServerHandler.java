@@ -1,5 +1,6 @@
 package com.lightrpc.core.server;
 
+import com.lightrpc.common.enums.MessageTypeEnum;
 import com.lightrpc.common.model.RpcMessage;
 import com.lightrpc.common.model.RpcRequest;
 import com.lightrpc.common.model.RpcResponse;
@@ -61,7 +62,7 @@ public class RpcServerHandler extends SimpleChannelInboundHandler<RpcMessage> {
         // 复用原来的 RpcMessage 或者新建一个
         RpcMessage responseMessage = new RpcMessage();
         responseMessage.setCodec(msg.getCodec());
-        responseMessage.setMessageType((byte) 2); // Response
+        responseMessage.setMessageType(MessageTypeEnum.RESPONSE.getType()); // Response
         responseMessage.setRequestId(msg.getRequestId());
         responseMessage.setData(response);
         

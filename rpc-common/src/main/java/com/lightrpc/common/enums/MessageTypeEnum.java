@@ -4,9 +4,9 @@ import lombok.Getter;
 
 @Getter
 public enum MessageTypeEnum {
+    HEART((byte) 0),
     REQUEST((byte) 1),
-    RESPONSE((byte) 2),
-    HEART((byte) 2);
+    RESPONSE((byte) 2);
 
     /**
      * 消息类型
