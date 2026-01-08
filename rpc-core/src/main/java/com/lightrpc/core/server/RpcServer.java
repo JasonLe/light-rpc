@@ -11,9 +11,11 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class RpcServer {
@@ -83,6 +85,11 @@ public class RpcServer {
 
                             // 解码器 (Inbound): 接收数据时，把字节变成对象 (处理粘包)
                             ch.pipeline().addLast(new RpcMessageDecoder());
+
+                            // 空闲检测
+                            // 参数：(读空闲时间, 写空闲时间, 读写空闲时间, 单位)
+                            // 这里设置 30 秒没有读到数据，就触发 userEventTriggered 事件
+                            ch.pipeline().addLast(new IdleStateHandler(10, 0, 0, TimeUnit.SECONDS));
 
                             // 业务处理器 (Inbound): 真正的 RPC 业务逻辑
                             ch.pipeline().addLast(new RpcServerHandler());

@@ -6,6 +6,8 @@ import com.lightrpc.common.model.RpcRequest;
 import com.lightrpc.common.model.RpcResponse;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -19,10 +21,10 @@ public class RpcServerHandler extends SimpleChannelInboundHandler<RpcMessage> {
         // 3. RpcMessageDecoder 反序列化成功了
         log.info("【服务端】接收到消息: {}", msg);
 
-        // 如果是心跳包 (假设类型 3 是心跳)
-        if (msg.getMessageType() == 3) {
-            log.info("【服务端】接收到心跳检测...");
-            return;
+        // 如果是心跳包
+        if (msg.getMessageType() == MessageTypeEnum.HEART.getType()) {
+            log.info("【服务端】接收到客户端心跳 Ping: {}", ctx.channel().remoteAddress());
+            return; // 心跳包直接返回，不走下面的业务逻辑
         }
 
         // 1. 获取 msg 中的 RpcRequest
@@ -67,6 +69,20 @@ public class RpcServerHandler extends SimpleChannelInboundHandler<RpcMessage> {
         responseMessage.setData(response);
         
         ctx.writeAndFlush(responseMessage);
+    }
+
+    // 处理空闲事件
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt instanceof IdleStateEvent) {
+            IdleStateEvent event = (IdleStateEvent) evt;
+            if (event.state() == IdleState.READER_IDLE) {
+                log.warn("【服务端】10秒未收到数据，关闭连接: {}", ctx.channel().remoteAddress());
+                ctx.close(); // 强制关闭连接
+            }
+        } else {
+            super.userEventTriggered(ctx, evt);
+        }
     }
 
     @Override

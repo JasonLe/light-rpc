@@ -12,9 +12,11 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class RpcClient {
@@ -44,6 +46,11 @@ public class RpcClient {
                             // Pipeline 必须和服务端保持一致（编解码器顺序）
                             ch.pipeline().addLast(new RpcMessageEncoder());
                             ch.pipeline().addLast(new RpcMessageDecoder());
+
+                            // 客户端检测写空闲
+                            // 如果 5 秒没有向服务端发送数据，触发 WRITER_IDLE 事件
+//                            ch.pipeline().addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS));
+
                             ch.pipeline().addLast(new RpcClientHandler());
                         }
                     });
