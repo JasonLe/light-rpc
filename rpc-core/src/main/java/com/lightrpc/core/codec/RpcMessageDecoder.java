@@ -36,7 +36,7 @@ public class RpcMessageDecoder extends LengthFieldBasedFrameDecoder {
         // 逐个读取 Header (必须和 Encoder 的写入顺序完全一致)
         int magic = frame.readInt(); // 魔数
         if (magic != 0xCAFEBABE) {
-            throw new IllegalArgumentException("Magic number is illegal: " + magic);
+            throw new IllegalArgumentException("魔数非法: " + magic);
         }
 
         byte version = frame.readByte(); // 版本

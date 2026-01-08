@@ -29,7 +29,7 @@ public class UnprocessedRequests {
             future.complete(response);
         } else {
             // 这种情况可能是：服务端处理太慢，客户端已经超时并删除了 future，结果服务端才返回
-            System.out.println("Received a response but no matching future found: " + response.getRequestId());
+            System.out.println("收到响应但未找到匹配的 Future: " + response.getRequestId());
         }
     }
 }

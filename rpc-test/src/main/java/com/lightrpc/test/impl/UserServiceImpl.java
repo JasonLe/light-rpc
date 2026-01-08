@@ -1,9 +1,11 @@
 package com.lightrpc.test.impl;
 
 import com.lightrpc.api.user.UserService;
+import com.lightrpc.core.annotation.LightRpcService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@LightRpcService
 public class UserServiceImpl implements UserService {
     @Override
     public String getUser(String username) {

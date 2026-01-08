@@ -35,7 +35,7 @@ public class RpcServerHandler extends SimpleChannelInboundHandler<RpcMessage> {
             // 2. 获取服务实现类
             Object service = LocalRegistry.get(request.getInterfaceName());
             if (service == null) {
-                throw new RuntimeException("Service not found: " + request.getInterfaceName());
+                throw new RuntimeException("未找到服务: " + request.getInterfaceName());
             }
             
             // 处理参数类型
@@ -49,13 +49,13 @@ public class RpcServerHandler extends SimpleChannelInboundHandler<RpcMessage> {
             Object result = method.invoke(service, request.getParameters());
             
             response.setCode(200);
-            response.setMessage("success");
+            response.setMessage("Success");
             response.setData(result);
             
         } catch (Exception e) {
             log.error("RPC调用执行失败", e);
             response.setCode(500);
-            response.setMessage("fail: " + e.getMessage());
+            response.setMessage("Fail: " + e.getMessage());
         }
 
         // 4. 封装 RpcResponse 发回给客户端
